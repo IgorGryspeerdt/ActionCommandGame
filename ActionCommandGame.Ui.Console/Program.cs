@@ -1,12 +1,7 @@
 ﻿using System.Text;
-using ActionCommandGame.Configuration;
-using ActionCommandGame.Repository;
-using ActionCommandGame.Services;
-using ActionCommandGame.Services.Abstractions;
-using ActionCommandGame.Ui.ConsoleApp.Navigation;
-using ActionCommandGame.Ui.ConsoleApp.Stores;
+using ActionCommandGame.Sdk;
+using ActionCommandGame.Sdk.Extensions;
 using ActionCommandGame.Ui.ConsoleApp.Views;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,63 +9,39 @@ namespace ActionCommandGame.Ui.ConsoleApp
 {
     class Program
     {
-        private static IServiceProvider? ServiceProvider { get; set; }
-        private static IConfiguration? Configuration { get; set; }
+        private static string? _jwtToken;
 
         static async Task Main()
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-            
-            Configuration = builder.Build();
+
+            var configuration = builder.Build();
 
             var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
-            ServiceProvider = serviceCollection.BuildServiceProvider();
 
-            var navigationManager = ServiceProvider.GetRequiredService<NavigationManager>();
+           serviceCollection.AddActionCommandGameSdk(
+                baseUrl: configuration["ApiBaseUrl"] ?? "https://localhost:5001",
+                getToken: () => _jwtToken
+            );
 
-            var dbContext = ServiceProvider.GetRequiredService<ActionCommandGameDbContext>();
-            dbContext.Initialize();
+           var serviceProvider = serviceCollection.BuildServiceProvider();
 
             Console.OutputEncoding = Encoding.UTF8;
-            
-            await navigationManager.NavigateTo<TitleView>();
-        }
 
-        public static void ConfigureServices(IServiceCollection services)
+         
+            var authService = serviceProvider.GetRequiredService<AuthSdkService>();
+            var playerService = serviceProvider.GetRequiredService<PlayerSdkService>();
+            var itemService = serviceProvider.GetRequiredService<ItemSdkService>();
+            var gameService = serviceProvider.GetRequiredService<GameSdkService>();
 
-        {
-            var appSettings = new AppSettings();
-            Configuration?.Bind(nameof(AppSettings), appSettings);
-            services.AddSingleton(appSettings);
-            
-            services.AddDbContext<ActionCommandGameDbContext>(options =>
-                options.UseInMemoryDatabase(nameof(ActionCommandGameDbContext)));
+            string? jwtToken = null;
+            var authView = new AuthView(authService, token => jwtToken = token);
 
-            services.AddSingleton<MemoryStore>();
+            while (!await authView.ShowAsync()) { }
+         
 
-            //Register Navigation
-            services.AddTransient<NavigationManager>();
-
-            //Register the Views
-            services.AddTransient<ExitView>();
-            services.AddTransient<GameView>();
-            services.AddTransient<HelpView>();
-            services.AddTransient<InventoryView>();
-            services.AddTransient<LeaderboardView>();
-            services.AddTransient<PlayerSelectionView>();
-            services.AddTransient<ShopView>();
-            services.AddTransient<TitleView>();
-
-            //Register Services
-            services.AddScoped<IGameService, GameService>();
-            services.AddScoped<IItemService, ItemService>();
-            services.AddScoped<INegativeGameEventService, NegativeGameEventService>();
-            services.AddScoped<IPositiveGameEventService, PositiveGameEventService>();
-            services.AddScoped<IPlayerItemService, PlayerItemService>();
-            services.AddScoped<IPlayerService, PlayerService>();
-        }
+}
     }
 }

@@ -20,5 +20,7 @@ namespace ActionCommandGame.Model
 
         public IList<PlayerItem> Inventory { get; set; } = new List<PlayerItem>();
 
+        public int UserId { get; set; }
+        public User User { get; set; }
     }
 }

@@ -2,10 +2,14 @@
 using ActionCommandGame.Extensions;
 using ActionCommandGame.Services.Abstractions;
 using ActionCommandGame.Services.Model.Core;
+using ActionCommandGame.Sdk;
 using ActionCommandGame.Ui.ConsoleApp.Abstractions;
 using ActionCommandGame.Ui.ConsoleApp.ConsoleWriters;
 using ActionCommandGame.Ui.ConsoleApp.Navigation;
 using ActionCommandGame.Ui.ConsoleApp.Stores;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ActionCommandGame.Ui.ConsoleApp.Views
 {
@@ -14,21 +18,24 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
         private readonly AppSettings _settings;
         private readonly MemoryStore _memoryStore;
         private readonly NavigationManager _navigationManager;
-        private readonly IGameService _gameService;
-        private readonly IPlayerService _playerService;
+        private readonly GameSdkService _gameService;
+        private readonly PlayerSdkService _playerService;
+        private readonly ItemSdkService _itemService;
 
         public GameView(
             AppSettings settings,
             MemoryStore memoryStore,
             NavigationManager navigationManager,
-            IGameService gameService,
-            IPlayerService playerService)
+            GameSdkService gameService,
+            PlayerSdkService playerService,
+            ItemSdkService itemService)
         {
             _settings = settings;
             _memoryStore = memoryStore;
             _navigationManager = navigationManager;
             _gameService = gameService;
             _playerService = playerService;
+            _itemService = itemService;
         }
 
         public async Task Show()
@@ -37,6 +44,22 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
             //Get the player from somewhere
             var currentPlayerId = _memoryStore.CurrentPlayerId;
+
+            // Player selection
+            var players = await _playerService.GetPlayersAsync();
+            if (players == null || players.Count == 0)
+            {
+                Console.WriteLine("No players found. Please create a player first.");
+                return;
+            }
+
+            Console.WriteLine("Select a player:");
+            foreach (var p in players)
+            {
+                Console.WriteLine($"{p.Id}: {p.Name} (Money: {p.Money}, XP: {p.Experience})");
+            }
+            Console.Write("Enter player id: ");
+            int playerId = int.Parse(Console.ReadLine() ?? "0");
 
             while (true)
             {
@@ -120,14 +143,13 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
         public async Task ShowStats(int playerId)
         {
-            var playerResult = await _playerService.Get(playerId);
+            var player = await _playerService.GetPlayerAsync(playerId);
 
-            if (playerResult.Data is null)
+            if (player == null)
             {
                 return;
             }
-
-            var player = playerResult.Data;
+            
 
             //Check food consumption
             if (player.CurrentFuelId != null)
@@ -176,7 +198,7 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
         private async Task PerformAction(int playerId)
         {
-            var result = await _gameService.PerformAction(playerId);
+            var result = await _gameService.PerformActionAsync(playerId);
 
             if (result.Data is null)
             {
@@ -226,7 +248,7 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
         private async Task Buy(int playerId, int itemId)
         {
-            var result = await _gameService.Buy(playerId, itemId);
+            var result = await _itemService.BuyItemAsync(playerId, itemId);
 
             if (result.IsSuccess && result.Data is not null)
             {

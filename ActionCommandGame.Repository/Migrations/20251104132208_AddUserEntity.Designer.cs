@@ -4,6 +4,7 @@ using ActionCommandGame.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ActionCommandGame.Repository.Migrations
 {
     [DbContext(typeof(ActionCommandGameDbContext))]
-    partial class ActionCommandGameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104132208_AddUserEntity")]
+    partial class AddUserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,9 +124,6 @@ namespace ActionCommandGame.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CurrentAttackPlayerItemId");
@@ -131,8 +131,6 @@ namespace ActionCommandGame.Repository.Migrations
                     b.HasIndex("CurrentDefensePlayerItemId");
 
                     b.HasIndex("CurrentFuelPlayerItemId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Players");
                 });
@@ -233,19 +231,11 @@ namespace ActionCommandGame.Repository.Migrations
                         .WithMany("FuelPlayers")
                         .HasForeignKey("CurrentFuelPlayerItemId");
 
-                    b.HasOne("ActionCommandGame.Model.User", "User")
-                        .WithMany("Players")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("CurrentAttackPlayerItem");
 
                     b.Navigation("CurrentDefensePlayerItem");
 
                     b.Navigation("CurrentFuelPlayerItem");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ActionCommandGame.Model.PlayerItem", b =>
@@ -284,11 +274,6 @@ namespace ActionCommandGame.Repository.Migrations
                     b.Navigation("DefensePlayers");
 
                     b.Navigation("FuelPlayers");
-                });
-
-            modelBuilder.Entity("ActionCommandGame.Model.User", b =>
-                {
-                    b.Navigation("Players");
                 });
 #pragma warning restore 612, 618
         }

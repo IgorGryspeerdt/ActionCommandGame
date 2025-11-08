@@ -2,7 +2,9 @@
 {
     public class PlayerFilter
     {
-        //Will only show players of the current user
+        
         public bool? FilterUserPlayers { get; set; }
+
+        public int? UserId { get; set; }
     }
 }

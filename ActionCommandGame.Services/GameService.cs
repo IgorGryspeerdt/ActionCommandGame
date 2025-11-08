@@ -75,7 +75,7 @@ namespace ActionCommandGame.Services
 
                     var waitSeconds = Math.Ceiling(cooldownSeconds - elapsedSeconds);
                     var waitText = $"You are still a bit tired. You have to wait another {waitSeconds} seconds.";
-                    playerResult = await _playerService.Get(playerId);
+                    playerResult = await _playerService.Get(playerId, player.UserId);
                     return new ServiceResult<GameResult>
                     {
                         Data = new GameResult { Player = playerResult.Data },
@@ -157,7 +157,7 @@ namespace ActionCommandGame.Services
             //Save Player
             await _database.SaveChangesAsync();
 
-            playerResult = await _playerService.Get(playerId);
+            playerResult = await _playerService.Get(playerId,player.UserId);
             var gameResult = new GameResult
             {
                 Player = playerResult.Data,
@@ -208,7 +208,7 @@ namespace ActionCommandGame.Services
             await _database.SaveChangesAsync();
 
             //Get the result objects
-            var playerResult = await _playerService.Get(playerId);
+            var playerResult = await _playerService.Get(playerId, player.UserId);
             var itemResult = await _itemService.Get(itemId);
 
             var buyResult = new BuyResult

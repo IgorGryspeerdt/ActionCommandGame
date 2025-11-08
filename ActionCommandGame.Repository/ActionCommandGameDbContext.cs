@@ -16,9 +16,14 @@ namespace ActionCommandGame.Repository
         public DbSet<Item> Items { get; set; }
         public DbSet<Player> Players { get; set; }
         public DbSet<PlayerItem> PlayerItems { get; set; }
-
+       public DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Player>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Players)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.ConfigureRelationships();
 
             base.OnModelCreating(modelBuilder);
