@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using ActionCommandGame.Dto;
 
 namespace ActionCommandGame.Sdk
 {
@@ -39,19 +40,5 @@ namespace ActionCommandGame.Sdk
         {
             PropertyNameCaseInsensitive = true
         };
-    }
-
-    // Placeholder DTOs
-    public class ItemDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public int Price { get; set; }
-    }
-
-    public class BuyResultDto
-    {
-        public PlayerDto Player { get; set; }
-        public ItemDto Item { get; set; }
     }
 }

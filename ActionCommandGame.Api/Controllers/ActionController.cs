@@ -1,7 +1,8 @@
-﻿using ActionCommandGame.Services.Abstractions;
+﻿using ActionCommandGame.Dto;
+using ActionCommandGame.Sdk;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ActionCommandGame.Api.Controllers
 {
@@ -10,39 +11,21 @@ namespace ActionCommandGame.Api.Controllers
     [Route("api/[controller]")]
     public class ActionController : ControllerBase
     {
-        private readonly IGameService _gameService;
-        private readonly IPlayerService _playerService;
+        private readonly GameSdkService _gameSdkService;
 
-        public ActionController(IGameService gameService, IPlayerService playerService)
+        public ActionController(GameSdkService gameSdkService)
         {
-            _gameService = gameService;
-            _playerService = playerService;
-        }
-
-        private int GetCurrentUserId()
-        {
-            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            _gameSdkService = gameSdkService;
         }
 
         [HttpPost("perform")]
-        public async Task<IActionResult> PerformAction([FromBody] PerformActionRequest model)
+        public async Task<ActionResult<GameResultDto>> PerformAction([FromBody] PerformActionRequest model)
         {
-            var userId = GetCurrentUserId();
-            
-            var playerResult = await _playerService.Get(model.PlayerId, userId);
-            if (playerResult.Data == null)
+            var result = await _gameSdkService.PerformActionAsync(model.PlayerId);
+            if (result == null)
             {
-                return Forbid("You do not own this player or it does not exist.");
+                return BadRequest();
             }
-
-            var result = await _gameService.PerformAction(model.PlayerId);
-
-            if (result.Data == null)
-            {
-                
-                return BadRequest(result.Messages);
-            }
-
             return Ok(result);
         }
 

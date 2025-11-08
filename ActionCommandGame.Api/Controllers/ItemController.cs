@@ -1,8 +1,9 @@
-﻿using ActionCommandGame.Repository;
-using ActionCommandGame.Services.Abstractions;
+﻿using ActionCommandGame.Dto;
+using ActionCommandGame.Sdk;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace ActionCommandGame.Api.Controllers
 {
@@ -11,51 +12,33 @@ namespace ActionCommandGame.Api.Controllers
     [Route("api/[controller]")]
     public class ItemController : ControllerBase
     {
-        private readonly IItemService _itemService;
-        private readonly IGameService _gameService;
-        private readonly IPlayerService _playerService;
+        private readonly ItemSdkService _itemSdkService;
 
-        public ItemController(IItemService itemService, IGameService gameService, IPlayerService playerService)
+        public ItemController(ItemSdkService itemSdkService)
         {
-            _itemService = itemService;
-            _gameService = gameService;
-            _playerService = playerService;
+            _itemSdkService = itemSdkService;
         }
 
-        private int GetCurrentUserId()
-        {
-            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        }
-
-        
         [HttpGet]
-        public async Task<IActionResult> GetItems()
+        public async Task<ActionResult<List<ItemDto>>> GetItems()
         {
-            var result = await _itemService.Find();
-            if (result.Data == null)
+            var items = await _itemSdkService.GetItemsAsync();
+            if (items == null || items.Count == 0)
             {
-                return NotFound(result.Messages);
+                return NotFound();
             }
-            return Ok(result.Data);
+            return Ok(items);
         }
 
         [HttpPost("buy")]
-        public async Task<IActionResult> BuyItem([FromBody] BuyItemRequest model)
+        public async Task<ActionResult<BuyResultDto>> BuyItem([FromBody] BuyItemRequest model)
         {
-            var userId = GetCurrentUserId();
-            // Check player ownership
-            var playerResult = await _playerService.Get(model.PlayerId, userId);
-            if (playerResult.Data == null)
+            var result = await _itemSdkService.BuyItemAsync(model.PlayerId, model.ItemId);
+            if (result == null)
             {
-                return Forbid("You do not own this player or it does not exist.");
+                return BadRequest();
             }
-
-            var result = await _gameService.Buy(model.PlayerId, model.ItemId);
-            if (result.Data == null)
-            {
-                return BadRequest(result.Messages);
-            }
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         public class BuyItemRequest

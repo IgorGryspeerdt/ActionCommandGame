@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using ActionCommandGame.Dto;
+using ActionCommandGame.Dto.requests;
 
 namespace ActionCommandGame.Sdk
 {
@@ -49,18 +51,19 @@ namespace ActionCommandGame.Sdk
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<PlayerDto?> UpdatePlayerAsync(UpdatePlayerRequest request)
+        {
+            var payload = JsonSerializer.Serialize(request);
+            var response = await _httpClient.PutAsync($"/api/player/{request.Id}",
+                new StringContent(payload, Encoding.UTF8, "application/json"));
+            if (!response.IsSuccessStatusCode) return null;
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<PlayerDto>(content, JsonOptions());
+        }
+
         private static JsonSerializerOptions JsonOptions() => new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
-    }
-
-    // Placeholder DTO
-    public class PlayerDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public int Money { get; set; }
-        public int Experience { get; set; }
     }
 }

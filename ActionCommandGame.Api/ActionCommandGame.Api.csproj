@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ActionCommandGame.Dto\ActionCommandGame.Dto.csproj" />
     <ProjectReference Include="..\ActionCommandGame.Repository\ActionCommandGame.Repository.csproj" />
+    <ProjectReference Include="..\ActionCommandGame.Sdk\ActionCommandGame.Sdk.csproj" />
     <ProjectReference Include="..\ActionCommandGame.Services\ActionCommandGame.Services.csproj" />
     <ProjectReference Include="..\ActionCommandGame.Services.Abstractions\ActionCommandGame.Services.Abstractions.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />

@@ -1,9 +1,11 @@
-﻿using ActionCommandGame.Services.Abstractions;
-using ActionCommandGame.Services.Model.Filters;
-using ActionCommandGame.Services.Model.Requests;
+﻿using ActionCommandGame.Dto;
+using ActionCommandGame.Sdk;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using ActionCommandGame.Dto.requests;
 
 namespace ActionCommandGame.Api.Controllers
 {
@@ -12,78 +14,68 @@ namespace ActionCommandGame.Api.Controllers
     [Route("api/[controller]")]
     public class PlayerController : ControllerBase
     {
-        private readonly IPlayerService _playerService;
+        private readonly PlayerSdkService _playerSdkService;
 
-        public PlayerController(IPlayerService playerService)
+        public PlayerController(PlayerSdkService playerSdkService)
         {
-            _playerService = playerService;
-        }
-
-        private int GetCurrentUserId()
-        {
-            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            _playerSdkService = playerSdkService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPlayers()
+        public async Task<ActionResult<List<PlayerDto>>> GetPlayers()
         {
-            var userId = GetCurrentUserId();
-            var result = await _playerService.Find(new PlayerFilter { UserId = userId });
-            if (result.Data == null)
+            var players = await _playerSdkService.GetPlayersAsync();
+            if (players == null || players.Count == 0)
             {
-                return NotFound(result.Messages);
+                return NotFound();
             }
-            return Ok(result.Data);
+            return Ok(players);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetPlayer(int id)
+        public async Task<ActionResult<PlayerDto>> GetPlayer(int id)
         {
-            var userId = GetCurrentUserId();
-            var result = await _playerService.Get(id, userId);
-            if (result.Data == null)
+            var player = await _playerSdkService.GetPlayerAsync(id);
+            if (player == null)
             {
-                return NotFound(result.Messages);
+                return NotFound();
             }
-            return Ok(result.Data);
+            return Ok(player);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreatePlayer([FromBody] CreatePlayerRequest model)
+        public async Task<ActionResult<PlayerDto>> CreatePlayer([FromBody] CreatePlayerRequest model)
         {
-            var userId = GetCurrentUserId();
-            var result = await _playerService.Create(model.Name, userId);
-            if (result.Data == null)
+            var player = await _playerSdkService.CreatePlayerAsync(model.Name);
+            if (player == null)
             {
-                return BadRequest(result.Messages);
+                return BadRequest();
             }
-            return CreatedAtAction(nameof(GetPlayer), new { id = result.Data.Id }, result.Data);
+            return CreatedAtAction(nameof(GetPlayer), new { id = player.Id }, player);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePlayer(int id, [FromBody] UpdatePlayerRequest model)
+        public async Task<ActionResult<PlayerDto>> UpdatePlayer(int id, [FromBody] UpdatePlayerRequest model)
         {
-            var userId = GetCurrentUserId();
             if (id != model.Id)
             {
                 return BadRequest("Player ID mismatch.");
             }
-            var result = await _playerService.Update(model, userId);
-            if (result.Data == null)
+            var player = await _playerSdkService.UpdatePlayerAsync(model);
+            if (player == null)
             {
-                return BadRequest(result.Messages);
+                return BadRequest();
             }
-            return Ok(result.Data);
+            return Ok(player);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePlayer(int id)
         {
-            var userId = GetCurrentUserId();
-            var result = await _playerService.Delete(id, userId);
-            if (!result.IsSuccess)
+            var success = await _playerSdkService.DeletePlayerAsync(id);
+            if (!success)
             {
-                return BadRequest(result.Messages);
+                return BadRequest();
             }
             return NoContent();
         }
