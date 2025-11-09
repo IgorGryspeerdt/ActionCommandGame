@@ -38,7 +38,7 @@ namespace ActionCommandGame.Repository
             GenerateFoodItems();
             GenerateDecorativeItems();
 
-            //God Mode Item
+            // God Mode Item
             Items.Add(new Item
             {
                 Name = "GOD MODE",
@@ -50,10 +50,19 @@ namespace ActionCommandGame.Repository
                 Price = 10000000
             });
 
-            Players.Add(new Player { Name = "John Doe", Money = 100 });
-            Players.Add(new Player { Name = "John Francks", Money = 100000, Experience = 2000 });
-            Players.Add(new Player { Name = "Luc Doleman", Money = 500, Experience = 5 });
-            Players.Add(new Player { Name = "Emilio Fratilleci", Money = 12345, Experience = 200 });
+            // Create a default user for seeding players
+            var defaultUser = new User
+            {
+                Email = "defaultuser@example.com",
+                PasswordHash = "seededhash" // Use a dummy hash for seed data
+            };
+            Users.Add(defaultUser);
+            SaveChanges(); // Save to generate User.Id
+
+            Players.Add(new Player { Name = "John Doe", Money = 100, UserId = defaultUser.Id });
+            Players.Add(new Player { Name = "John Francks", Money = 100000, Experience = 2000, UserId = defaultUser.Id });
+            Players.Add(new Player { Name = "Luc Doleman", Money = 500, Experience = 5, UserId = defaultUser.Id });
+            Players.Add(new Player { Name = "Emilio Fratilleci", Money = 12345, Experience = 200, UserId = defaultUser.Id });
 
             SaveChanges();
         }

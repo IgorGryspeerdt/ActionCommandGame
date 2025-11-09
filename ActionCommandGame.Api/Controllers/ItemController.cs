@@ -22,7 +22,8 @@ namespace ActionCommandGame.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<List<ItemDto>>> GetItems()
         {
-            var items = await _itemSdkService.GetItemsAsync();
+            var result = await _itemSdkService.Find();
+            var items = result.Data;
             if (items == null || items.Count == 0)
             {
                 return NotFound();
@@ -33,7 +34,7 @@ namespace ActionCommandGame.Api.Controllers
         [HttpPost("buy")]
         public async Task<ActionResult<BuyResultDto>> BuyItem([FromBody] BuyItemRequest model)
         {
-            var result = await _itemSdkService.BuyItemAsync(model.PlayerId, model.ItemId);
+            var result = await _itemSdkService.Buy(model.PlayerId, model.ItemId);
             if (result == null)
             {
                 return BadRequest();

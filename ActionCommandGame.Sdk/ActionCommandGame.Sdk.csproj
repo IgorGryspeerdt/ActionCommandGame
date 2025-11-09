@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ActionCommandGame.Configuration\ActionCommandGame.Configuration.csproj" />
     <ProjectReference Include="..\ActionCommandGame.Dto\ActionCommandGame.Dto.csproj" />
+    <ProjectReference Include="..\ActionCommandGame.Services.Abstractions\ActionCommandGame.Services.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

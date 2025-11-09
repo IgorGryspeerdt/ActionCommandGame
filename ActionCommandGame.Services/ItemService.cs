@@ -33,5 +33,45 @@ namespace ActionCommandGame.Services
 
             return new ServiceResult<IList<ItemResult>>(items);
         }
+
+        public async Task<ServiceResult<ItemResult>> Buy(int playerId, int itemId)
+        {
+           var player = await _dbContext.Players.FindAsync(playerId);
+            var item = await _dbContext.Items.FindAsync(itemId);
+
+            if (player == null || item == null || player.Money < item.Price)
+            {
+                return new ServiceResult<ItemResult>
+                {
+                    Data = null,
+                    Messages = new List<ServiceMessage>
+                    {
+                        new ServiceMessage
+                        {
+                            Code = "PurchaseFailed",
+                            Message = "Player or item not found, or insufficient funds."
+                        }
+                    }
+                };
+            }
+
+            player.Money -= item.Price;
+            
+            await _dbContext.SaveChangesAsync();
+
+            var itemResult = new ItemResult
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Description = item.Description,
+                Price = item.Price,
+                Fuel = item.Fuel,
+                Attack = item.Attack,
+                Defense = item.Defense,
+                ActionCooldownSeconds = item.ActionCooldownSeconds
+            };
+
+            return new ServiceResult<ItemResult>(itemResult);
+        }
     }
 }

@@ -3,6 +3,7 @@ using ActionCommandGame.Sdk;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using ActionCommandGame.Services.Abstractions;
 
 namespace ActionCommandGame.Api.Controllers
 {
@@ -11,17 +12,17 @@ namespace ActionCommandGame.Api.Controllers
     [Route("api/[controller]")]
     public class ActionController : ControllerBase
     {
-        private readonly GameSdkService _gameSdkService;
+        private readonly IGameService _gameService;
 
-        public ActionController(GameSdkService gameSdkService)
+        public ActionController(IGameService gameService)
         {
-            _gameSdkService = gameSdkService;
+            _gameService = gameService;
         }
 
         [HttpPost("perform")]
         public async Task<ActionResult<GameResultDto>> PerformAction([FromBody] PerformActionRequest model)
         {
-            var result = await _gameSdkService.PerformActionAsync(model.PlayerId);
+            var result = await _gameService.PerformAction(model.PlayerId);
             if (result == null)
             {
                 return BadRequest();

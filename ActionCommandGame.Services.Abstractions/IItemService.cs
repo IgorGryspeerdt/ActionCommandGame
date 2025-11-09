@@ -7,5 +7,6 @@ namespace ActionCommandGame.Services.Abstractions
     {
         Task<ServiceResult<ItemResult>> Get(int id);
         Task<ServiceResult<IList<ItemResult>>> Find();
+        Task<ServiceResult<ItemResult>> Buy(int playerId, int itemId); 
     }
 }

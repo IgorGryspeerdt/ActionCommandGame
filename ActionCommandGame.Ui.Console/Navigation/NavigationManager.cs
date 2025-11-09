@@ -1,21 +1,24 @@
 ﻿using ActionCommandGame.Ui.ConsoleApp.Abstractions;
 using ActionCommandGame.Ui.ConsoleApp.ConsoleWriters;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ActionCommandGame.Ui.ConsoleApp.Navigation
 {
-    internal class NavigationManager
+    public class NavigationManager
     {
         private readonly IServiceProvider _serviceProvider;
 
         public NavigationManager(IServiceProvider serviceProvider)
         {
+            Console.WriteLine($"[DI DEBUG] NavigationManager IServiceProvider HashCode: {serviceProvider.GetHashCode()}");
             _serviceProvider = serviceProvider;
         }
 
-        public async Task NavigateTo<T>(bool clearScreen = true) where T: IView
+        public async Task NavigateTo<T>(bool clearScreen = true) where T : IView
         {
-            var view = _serviceProvider.GetService(typeof(T)) as IView;
+            Console.WriteLine($"[DI DEBUG] IServiceProvider HashCode: {_serviceProvider.GetHashCode()}");
 
+            var view = _serviceProvider.GetRequiredService<T>();
             if (view is null)
             {
                 ConsoleWriter.WriteText("Error navigating to view", ConsoleColor.Red);

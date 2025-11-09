@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ActionCommandGame.Dto;
+using ActionCommandGame.Services.Abstractions;
+using ActionCommandGame.Services.Model.Filters;
+using ActionCommandGame.Services.Model.Results;
 
 namespace ActionCommandGame.Ui.ConsoleApp.Views
 {
@@ -18,16 +21,16 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
         private readonly MemoryStore _memoryStore;
         private readonly NavigationManager _navigationManager;
         private readonly GameSdkService _gameService;
-        private readonly PlayerSdkService _playerService;
-        private readonly ItemSdkService _itemService;
+        private readonly IPlayerService _playerService;
+        private readonly IItemService _itemService;
 
         public GameView(
             AppSettings settings,
             MemoryStore memoryStore,
             NavigationManager navigationManager,
             GameSdkService gameService,
-            PlayerSdkService playerService,
-            ItemSdkService itemService)
+            IPlayerService playerService,
+            IItemService itemService)
         {
             _settings = settings;
             _memoryStore = memoryStore;
@@ -42,7 +45,9 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
             ConsoleWriter.WriteText($"Play your game. Try typing \"help\" or \"{_settings.ActionCommand}\"", ConsoleColor.Yellow);
 
             // Player selection
-            var players = await _playerService.GetPlayersAsync();
+            var filter = new PlayerFilter { FilterUserPlayers = true, UserId = _memoryStore.CurrentUserId };
+            var playersResult = await _playerService.Find(filter);
+            var players = playersResult.Data?.ToList() ?? new List<PlayerResult>();
             if (players == null || players.Count == 0)
             {
                 Console.WriteLine("No players found. Please create a player first.");
@@ -53,13 +58,14 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
                     Console.WriteLine("Player name cannot be empty.");
                     return;
                 }
-                var newPlayer = await _playerService.CreatePlayerAsync(newName);
+                var newPlayerResult = await _playerService.Create(newName, _memoryStore.CurrentUserId);
+var newPlayer = newPlayerResult.Data;
                 if (newPlayer == null)
                 {
                     Console.WriteLine("Failed to create player.");
                     return;
                 }
-                players = new List<PlayerDto> { newPlayer };
+                players = new List<PlayerResult> { newPlayer };
                 Console.WriteLine($"Player '{newPlayer.Name}' created!");
             }
 
@@ -150,7 +156,8 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
         public async Task ShowStats(int playerId)
         {
-            var player = await _playerService.GetPlayerAsync(playerId);
+            var playerResult = await _playerService.Get(playerId, _memoryStore.CurrentUserId);
+            var player = playerResult.Data;
 
             if (player == null)
             {
@@ -256,12 +263,18 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
         private async Task Buy(int playerId, int itemId)
         {
-            var result = await _itemService.BuyItemAsync(playerId, itemId);
+            var result = await _itemService.Buy(playerId, itemId);
 
-            if (result != null && result.Item != null)
+            if (result != null && result.Data != null)
             {
-                ConsoleWriter.WriteText($"You bought {result.Item.Name} for €{result.Item.Price}");
-                ConsoleWriter.WriteText($"Thank you for shopping. Your current balance is €{result.Player.Money}.");
+                ConsoleWriter.WriteText($"You bought {result.Data.Name} for €{result.Data.Price}");
+
+                var playerResult = await _playerService.Get(playerId, _memoryStore.CurrentUserId);
+                var player = playerResult.Data;
+                if (player != null)
+                {
+                    ConsoleWriter.WriteText($"Thank you for shopping. Your current balance is €{player.Money}.");
+                }
             }
             else
             {

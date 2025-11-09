@@ -61,7 +61,7 @@ namespace ActionCommandGame.Services
             {
                 Name = name,
                 UserId = userId,
-                Money = 0,
+                Money = 200,
                 Experience = 0,
                 LastActionExecutedDateTime = null,
                 Inventory = new List<PlayerItem>()

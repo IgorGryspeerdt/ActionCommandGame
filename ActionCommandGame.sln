@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionCommandGame.Sdk", "Ac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionCommandGame.Dto", "ActionCommandGame.Dto\ActionCommandGame.Dto.csproj", "{18D87CAE-F55A-4960-8F5E-3EE460906C0A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "actioncommandgame.Ui.Test", "actioncommandgame.Ui.Test\actioncommandgame.Ui.Test.csproj", "{A0F244DC-FE79-419A-A4FF-E2E1B7D91321}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,10 @@ Global
 		{18D87CAE-F55A-4960-8F5E-3EE460906C0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18D87CAE-F55A-4960-8F5E-3EE460906C0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18D87CAE-F55A-4960-8F5E-3EE460906C0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0F244DC-FE79-419A-A4FF-E2E1B7D91321}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0F244DC-FE79-419A-A4FF-E2E1B7D91321}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0F244DC-FE79-419A-A4FF-E2E1B7D91321}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0F244DC-FE79-419A-A4FF-E2E1B7D91321}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,6 +128,7 @@ Global
 		{29FC23A9-1C57-4602-83F9-BC9638ED3816} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{13A45CE2-5D9D-4767-86E5-89514BEFFA1F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{18D87CAE-F55A-4960-8F5E-3EE460906C0A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A0F244DC-FE79-419A-A4FF-E2E1B7D91321} = {FC172E5F-1E61-488B-9934-91D1C73AFD45}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AF43B065-5545-4453-A97F-781AE33CE7DC}
