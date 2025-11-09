@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Http;
 using ActionCommandGame.Sdk.Handlers;
 using System;
+using ActionCommandGame.Configuration;
 
 namespace ActionCommandGame.Sdk.Extensions
 {
@@ -21,6 +22,7 @@ namespace ActionCommandGame.Sdk.Extensions
                 .AddHttpMessageHandler<AuthorizationHandler>();
             services.AddHttpClient<GameSdkService>(c => c.BaseAddress = new Uri(baseUrl))
                 .AddHttpMessageHandler<AuthorizationHandler>();
+
 
             return services;
         }

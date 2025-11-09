@@ -1,15 +1,14 @@
 ﻿using ActionCommandGame.Configuration;
-using ActionCommandGame.Extensions;
-using ActionCommandGame.Services.Abstractions;
-using ActionCommandGame.Services.Model.Core;
 using ActionCommandGame.Sdk;
 using ActionCommandGame.Ui.ConsoleApp.Abstractions;
 using ActionCommandGame.Ui.ConsoleApp.ConsoleWriters;
 using ActionCommandGame.Ui.ConsoleApp.Navigation;
 using ActionCommandGame.Ui.ConsoleApp.Stores;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ActionCommandGame.Dto;
 
 namespace ActionCommandGame.Ui.ConsoleApp.Views
 {
@@ -42,15 +41,26 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
         {
             ConsoleWriter.WriteText($"Play your game. Try typing \"help\" or \"{_settings.ActionCommand}\"", ConsoleColor.Yellow);
 
-            //Get the player from somewhere
-            var currentPlayerId = _memoryStore.CurrentPlayerId;
-
             // Player selection
             var players = await _playerService.GetPlayersAsync();
             if (players == null || players.Count == 0)
             {
                 Console.WriteLine("No players found. Please create a player first.");
-                return;
+                Console.Write("Enter new player name: ");
+                var newName = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(newName))
+                {
+                    Console.WriteLine("Player name cannot be empty.");
+                    return;
+                }
+                var newPlayer = await _playerService.CreatePlayerAsync(newName);
+                if (newPlayer == null)
+                {
+                    Console.WriteLine("Failed to create player.");
+                    return;
+                }
+                players = new List<PlayerDto> { newPlayer };
+                Console.WriteLine($"Player '{newPlayer.Name}' created!");
             }
 
             Console.WriteLine("Select a player:");
@@ -60,10 +70,10 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
             }
             Console.Write("Enter player id: ");
             int playerId = int.Parse(Console.ReadLine() ?? "0");
+            _memoryStore.CurrentPlayerId = playerId;
 
             while (true)
             {
-
                 ConsoleWriter.WriteText($"{_settings.CommandPromptText} ", ConsoleColor.DarkGray, false);
 
                 string? command = Console.ReadLine();
@@ -89,9 +99,8 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
                 if (CheckCommand(command, new[] { _settings.ActionCommand }))
                 {
-                    await PerformAction(currentPlayerId);
-
-                    await ShowStats(currentPlayerId);
+                    await PerformAction(playerId);
+                    await ShowStats(playerId);
                 }
 
                 if (CheckCommand(command, new[] { "shop", "store" }))
@@ -109,12 +118,12 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
                         continue;
                     }
 
-                    await Buy(currentPlayerId, itemId.Value);
+                    await Buy(playerId, itemId.Value);
                 }
 
                 if (CheckCommand(command, new[] { "bal", "balance", "money", "xp", "level", "statistics", "stats", "stat", "info" }))
                 {
-                    await ShowStats(currentPlayerId);
+                    await ShowStats(playerId);
                 }
 
                 if (CheckCommand(command, new[] { "leaderboard", "lead", "top", "rank", "ranking" }))
@@ -134,8 +143,6 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
             }
         }
 
-
-
         private static bool CheckCommand(string command, IList<string> matchingCommands)
         {
             return matchingCommands.Any(c => command.ToLower().StartsWith(c.ToLower()));
@@ -149,9 +156,8 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
             {
                 return;
             }
-            
 
-            //Check food consumption
+            // Food
             if (player.CurrentFuelId != null)
             {
                 ConsoleWriter.WriteText($"[{player.CurrentFuelName}] ", ConsoleColor.Yellow, false);
@@ -163,7 +169,7 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
                 ConsoleWriter.WriteText("nothing ", null, false);
             }
 
-            //Check attack consumption
+            // Attack
             if (player.CurrentAttackId != null)
             {
                 ConsoleWriter.WriteText($"[{player.CurrentAttackName}] ", ConsoleColor.Yellow, false);
@@ -175,7 +181,7 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
                 ConsoleWriter.WriteText("nothing ", null, false);
             }
 
-            //Check defense consumption
+            // Defense
             if (player.CurrentDefenseId != null)
             {
                 ConsoleWriter.WriteText($"[{player.CurrentDefenseName}] ", ConsoleColor.Yellow, false);
@@ -189,8 +195,12 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
 
             ConsoleWriter.WriteText("[Money] ", ConsoleColor.Yellow, false);
             ConsoleWriter.WriteText($"€{player.Money}  ", null, false);
+
+            // Level calculation
+            int level = CalculateLevel(player.Experience);
+            int nextLevelXp = GetExperienceForNextLevel(level);
             ConsoleWriter.WriteText("[Level] ", ConsoleColor.Yellow, false);
-            ConsoleWriter.WriteText($"{player.GetLevel()} ({player.Experience}/{player.GetExperienceForNextLevel()})  ", null, false);
+            ConsoleWriter.WriteText($"{level} ({player.Experience}/{nextLevelXp})  ", null, false);
 
             ConsoleWriter.WriteText();
             ConsoleWriter.WriteText();
@@ -200,20 +210,14 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
         {
             var result = await _gameService.PerformActionAsync(playerId);
 
-            if (result.Data is null)
+            if (result == null || result.Player == null)
             {
                 return;
             }
 
-            var player = result.Data.Player;
-
-            if (player is null)
-            {
-                return;
-            }
-
-            var positiveGameEvent = result.Data.PositiveGameEvent;
-            var negativeGameEvent = result.Data.NegativeGameEvent;
+            var player = result.Player;
+            var positiveGameEvent = result.PositiveGameEvent;
+            var negativeGameEvent = result.NegativeGameEvent;
 
             if (positiveGameEvent != null)
             {
@@ -238,10 +242,14 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
                 {
                     ConsoleWriter.WriteText(negativeGameEvent.Description);
                 }
-                ConsoleWriter.WriteMessages(result.Data.NegativeGameEventMessages);
+                if (result.NegativeGameEventMessages != null)
+                {
+                    foreach (var msg in result.NegativeGameEventMessages)
+                    {
+                        ConsoleWriter.WriteText(msg, ConsoleColor.Red);
+                    }
+                }
             }
-
-            ConsoleWriter.WriteMessages(result.Messages);
 
             ConsoleWriter.WriteText();
         }
@@ -250,21 +258,14 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
         {
             var result = await _itemService.BuyItemAsync(playerId, itemId);
 
-            if (result.IsSuccess && result.Data is not null)
+            if (result != null && result.Item != null)
             {
-                ConsoleWriter.WriteText($"You bought {result.Data.Item?.Name} for €{result.Data.Item?.Price}");
-                ConsoleWriter.WriteText($"Thank you for shopping. Your current balance is €{result.Data.Player?.Money}.");
-
-                //Check if there are info and warning messages
-                var nonErrorMessages =
-                    result.Messages.Where(m => m.MessagePriority == MessagePriority.Error).ToList();
-                ConsoleWriter.WriteMessages(nonErrorMessages);
+                ConsoleWriter.WriteText($"You bought {result.Item.Name} for €{result.Item.Price}");
+                ConsoleWriter.WriteText($"Thank you for shopping. Your current balance is €{result.Player.Money}.");
             }
             else
             {
-                var errorMessages = result.Messages.Where(m => m.MessagePriority == MessagePriority.Error)
-                    .ToList();
-                ConsoleWriter.WriteMessages(errorMessages);
+                ConsoleWriter.WriteText("Purchase failed.", ConsoleColor.Red);
             }
 
             Console.WriteLine();
@@ -282,6 +283,16 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
             int.TryParse(idPart, out var itemId);
 
             return itemId;
+        }
+
+        private int CalculateLevel(int experience)
+        {
+            return (int)((Math.Sqrt(100 * (2 * experience + 25)) + 50) / 100);
+        }
+
+        private int GetExperienceForNextLevel(int level)
+        {
+            return ((level * level + level) / 2 * 100) - (level * 100);
         }
     }
 }

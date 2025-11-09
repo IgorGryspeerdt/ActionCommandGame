@@ -1,4 +1,5 @@
 ﻿using ActionCommandGame.Sdk;
+using ActionCommandGame.Ui.ConsoleApp.Stores;
 using System;
 using System.Threading.Tasks;
 
@@ -14,6 +15,7 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
             _authService = authService;
             _setToken = setToken;
         }
+
 
         public async Task<bool> ShowAsync()
         {
@@ -38,7 +40,6 @@ namespace ActionCommandGame.Ui.ConsoleApp.Views
             {
                 token = await _authService.RegisterAsync(email, password);
             }
-
             if (!string.IsNullOrEmpty(token))
             {
                 _setToken(token);
